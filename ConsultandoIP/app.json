@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "ConsultandoIP",
+    "slug": "ConsultandoIP",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "ConsultandoIP"
+}
