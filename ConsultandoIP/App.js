@@ -1,179 +1,286 @@
-// Importar los componentes necesarios de React Native
-import React from 'react';
-import { View, Text, TextInput, Button, Image, FlatList, Alert} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ScrollView,
+} from "react-native";
+import axios from "axios"; // para hacer la petición a la API
+import validator from "validator"; // para validar el formato de la IP
+import AsyncStorage from "@react-native-async-storage/async-storage"; // para usar el almacenamiento local
 
-// Crear un componente de clase llamado IPScreen
-class IPScreen extends React.Component {
-  // En el constructor de la clase, inicializar el estado
-  constructor(props) {
-    super(props);
-    this.state = {
-      ip: '', // Almacenar el valor del TextInput
-      data: null, // Almacenar el objeto con los datos de la API
-      loading: false, // Indicar si se está realizando una petición a la API
-      history: [] // Almacenar un arreglo con las consultas realizadas
-    };
-  }
+const HISTORY_KEY = "@ip_history"; // clave del historial
 
-  // Crear un método para validar el formato de la dirección IP
-  validateIP(ip) {
-    // Usar una expresión regular para validar el formato
-    const regex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    return regex.test(ip);
-  }
+const IPInfoScreen = () => {
+  const [ip, setIp] = useState(""); // IP ingresada
+  const [data, setData] = useState(null); // respuesta de la API
+  const [error, setError] = useState(null); // error de la petición o de validación
+  const [history, setHistory] = useState([]); // historial de consultas
 
-  // Crear un método para obtener los datos de la API
-  fetchData(ip) {
-    // Cambiar el estado de loading a true
-    this.setState({ loading: true });
-    // Realizar una petición GET a la API con el formato adecuado
-    fetch(`https://ipwhois.io/json/${ip}`)
-      .then(response => response.json()) // Convertir la respuesta a un objeto JSON
-      .then(data => {
-        if (data.success) { // Si la respuesta tiene una propiedad success con valor true
-          // Actualizar el estado de data con el objeto JSON
-          this.setState({ data: data });
-          // Agregar la consulta al arreglo de history
-          this.setState(prevState => ({
-            history: [...prevState.history, data]
-          }));
-          // Guardar el arreglo de history en el almacenamiento local con la clave ip_history
-          AsyncStorage.setItem('ip_history', JSON.stringify(this.state.history));
-        } else { // Si la respuesta tiene una propiedad success con valor false
-          // Mostrar una alerta con el mensaje de error
-          Alert.alert('Error', data.message);
-        }
-      })
-      .catch(error => { // Si ocurre algún error en la petición
-        // Mostrar una alerta con el mensaje de error
-        Alert.alert('Error', error.message);
-      })
-      .finally(() => { // Al finalizar la petición
-        // Cambiar el estado de loading a false
-        this.setState({ loading: false });
-      });
-  }
+  useEffect(() => {
+    // obtener el historial cuando el componente se monta
+    setHistory(getHistory());
+  }, []);
 
-  // Crear un método para borrar los datos del estado y del almacenamiento local
-  clearData() {
-    // Usar el método setState para asignar un valor vacío a las propiedades ip, data y history
-    this.setState({
-      ip: '',
-      data: null,
-      history: []
-    });
-    // Usar el método AsyncStorage.removeItem para eliminar el elemento con la clave ip_history
-    AsyncStorage.removeItem('ip_history');
-  }
+  const getIPInfo = () => {
+    // validar el formato de la IP
+    if (validator.isIP(ip)) {
+      // hacer la petición a la API
+      axios
+        .get(`https://ipwho.is/${ip}`)
+        .then((response) => {
+          // guardar la respuesta en el estado data
+          setData(response.data);
+          // limpiar el estado error
+          setError(null);
+          // guardar la consulta en el historial
+          saveToHistory(ip, response.data);
+        })
+        .catch((err) => {
+          // guardar el mensaje de error en el estado error
+          setError(err.message);
+          // limpiar el estado data
+          setData(null);
+        });
+    } else {
+      // guardar el mensaje de error en el estado error
+      setError("La IP ingresada no tiene un formato válido");
+      // limpiar el estado data
+      setData(null);
+    }
+  };
 
-  // Crear un método que se ejecute cuando el componente se monte en el árbol de renderizado
-  componentDidMount() {
-    // Usar el método AsyncStorage.getItem para obtener el elemento con la clave ip_history
-    AsyncStorage.getItem('ip_history')
-      .then(value => { // Si el elemento existe
-        if (value) {
-          // Actualizar el estado de history con el valor del elemento, que debe ser un arreglo de consultas
-          this.setState({ history: JSON.parse(value) });
-        }
-      })
-      .catch(error => { // Si ocurre algún error al obtener el elemento
-        // Mostrar una alerta con el mensaje de error
-        Alert.alert('Error', error.message);
-      });
-  }
+  const saveToHistory = async (ip, data) => {
+    // guardar la consulta actual en el historial
+    try {
+      // obtener el historial actual desde AsyncStorage
+      const history = await AsyncStorage.getItem(HISTORY_KEY);
+      let historyArray = [];
+      if (history) {
+        // convertir el historial a un arreglo de JavaScript
+        historyArray = JSON.parse(history);
+      }
+      // crear un objeto con la IP y los demás datos que quieres mostrar
+      const ipInfo = {
+        ip: ip,
+        type: data.type,
+        continent: data.continent,
+        country: data.country,
+        region: data.region,
+        city: data.city,
+        capital: data.capital,
+      };
+      // agregar el objeto al final del arreglo
+      historyArray.push(ipInfo);
+      // convertir el arreglo a una cadena de JSON
+      const historyString = JSON.stringify(historyArray);
+      // guardar el historial en AsyncStorage
+      await AsyncStorage.setItem(HISTORY_KEY, historyString);
+      // actualizar el estado del historial
+      setHistory(historyArray);
+    } catch (error) {
+      // manejar el error
+      console.log(error);
+    }
+  };
 
-  // Crear un método para devolver el elemento JSX que se mostrará en la pantalla
-  render() {
-    // Usar los componentes de React Native para crear la interfaz gráfica
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Consultando IP</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Ingrese una dirección IP"
-          value={this.state.ip}
-          onChangeText={text => this.setState({ ip: text })}
-        />
-        <Button
-          title="Consultar"
-          onPress={() => {
-            if (this.validateIP(this.state.ip)) {
-              this.fetchData(this.state.ip);
-            } else {
-              Alert.alert('Error', 'Formato de IP inválido');
-            }
-          }}
-        />
-        <Button
-          title="Eliminar"
-          onPress={() => this.clearData()}
-        />
-        <FlatList
-          data={this.state.history}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>IP: {item.ip}</Text>
-              <Text>Tipo de IP: {item.type}</Text>
-              <Text>Continente: {item.continent}</Text>
-              <Text>País: {item.country}</Text>
-              <Text>Código de País: {item.country_code}</Text>
-              <Text>Región: {item.region}</Text>
-              <Text>Ciudad: {item.city}</Text>
-              <Text>Capital: {item.country_capital}</Text>
+  const getHistory = async () => {
+    // obtener el historial desde AsyncStorage
+    try {
+      // obtener el historial como una cadena de JSON
+      const history = await AsyncStorage.getItem(HISTORY_KEY);
+      let historyArray = [];
+      if (history) {
+        // convertir el historial a un arreglo de JavaScript
+        historyArray = JSON.parse(history);
+      }
+      // devolver el arreglo del historial
+      return historyArray;
+    } catch (error) {
+      // manejar el error
+      console.log(error);
+      return [];
+    }
+  };
+
+  const clearHistory = async () => {
+    // borrar el historial desde AsyncStorage
+    try {
+      // eliminar el historial de AsyncStorage
+      await AsyncStorage.removeItem(HISTORY_KEY);
+      // actualizar el estado del historial
+      setHistory([]);
+    } catch (error) {
+      // manejar el error
+      console.log(error);
+    }
+  };
+
+  return (
+    <ScrollView>
+      <View style={styles.Screen}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Ingrese una dirección IP</Text>
+          <TextInput
+            style={styles.input}
+            value={ip}
+            onChangeText={(text) => setIp(text)}
+            placeholder="Ingrese una dirección IP, Ejemplo: 8.8.8.8"
+          />
+          <TouchableOpacity onPress={getIPInfo} style={styles.button}>
+            <Text>Consultar</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.body}>
+          {error && <Text style={styles.error}>{error}</Text>}
+          {data && (
+            <View style={styles.info}>
               <Image
                 style={styles.flag}
-                source={{ uri: item.country_flag }}
+                source={{ uri: data?.flag?.img }} //NO LA MUESTRA >:C
+                resizeMode="contain"
               />
-              <Text>Hora actual: {item.time_zone.current_time}</Text>
-              <Text>Datos de conexión: {item.org}, {item.isp}, {item.domain}</Text>
+              <Text style={styles.title}>Informacion:</Text>
+              <Text style={styles.label}>IP: {data.ip}</Text>
+              <Text style={styles.label}>Tipo de IP: {data.type}</Text>
+              <Text style={styles.label}>Continente: {data.continent}</Text>
+              <Text style={styles.label}>País: {data.country}</Text>
+              <Text style={styles.label}>
+                Código de País: {data.country_code}
+              </Text>
+              <Text style={styles.label}>Región: {data.region}</Text>
+              <Text style={styles.label}>Ciudad: {data.city}</Text>
+              <Text style={styles.label}>Capital: {data.capital}</Text>
+              <Text style={styles.label}>
+                Hora actual: {data?.timezone?.current_time}
+              </Text>
+              <Text style={styles.label}>Datos de conexión:</Text>
+              <Text style={styles.label}>
+                Organización: {data?.connection?.org}
+              </Text>
+              <Text style={styles.label}>ISP: {data?.connection?.isp}</Text>
+              <Text style={styles.label}>
+                Dominio: {data?.connection?.domain}
+              </Text>
             </View>
           )}
-          keyExtractor={item => item.ip}
-        />
+          <HistoryList
+            history={history}
+            setHistory={setHistory}
+            clearHistory={clearHistory}
+          />
+        </View>
       </View>
-    );
-  }
-}
+    </ScrollView>
+  );
+};
 
-// Exportar el componente IPScreen
-export default IPScreen;
+const HistoryList = ({ history, setHistory, clearHistory }) => {
+  // componente para mostrar el historial
+  return (
+    <View style={styles.history}>
+      <Text style={styles.title}>Historial de consultas</Text>
+      {history.length > 0 ? (
+        <>
+          {history.map((ipInfo, index) => (
+            <View key={index} style={styles.item}>
+              <Text style={styles.label}>IP: {ipInfo.ip}</Text>
+              <Text style={styles.label}>Tipo de IP: {ipInfo.type}</Text>
+              <Text style={styles.label}>Continente: {ipInfo.continent}</Text>
+              <Text style={styles.label}>País: {ipInfo.country}</Text>
+              <Text style={styles.label}>Región: {ipInfo.region}</Text>
+              <Text style={styles.label}>Ciudad: {ipInfo.city}</Text>
+              <Text style={styles.label}>Capital: {ipInfo.capital}</Text>
+            </View>
+          ))}
+          <View style={{ alignItems: "center" }}>
+            <TouchableOpacity onPress={clearHistory} style={styles.button}>
+              <Text>Borrar Historial</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : (
+        <Text style={styles.label}>No hay consultas anteriores</Text>
+      )}
+    </View>
+  );
+};
 
-// Definir los estilos para la pantalla
-const styles = {
-  container: {
+const styles = StyleSheet.create({
+  Screen: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#fff'
+    backgroundColor:'#fff'
+  },
+  header: {
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    borderWidth: 2,
+    borderColor: "#cecece",
+  },
+  body: {
+    margin: 10,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#cecece",
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    margin: 10
+    fontWeight: "bold",
+    marginVertical: 16,
   },
   input: {
+    width: "80%",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginVertical: 16,
+  },
+  button: {
+    backgroundColor: "#FFC436",
     borderRadius: 5,
     padding: 10,
-    margin: 10
+    width: "70%",
+    height: 45,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
   },
-  card: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    margin: 10
+  error: {
+    color: "red",
+    marginVertical: 16,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10
+  info: {
+    width: "80%",
+    marginVertical: 16,
+  },
+  label: {
+    fontSize: 16,
+    marginVertical: 4,
   },
   flag: {
-    width: 50,
-    height: 30,
-    margin: 10
-  }
-};
+    width: 100,
+    height: 100,
+    marginVertical: 16,
+  },
+  history: {
+    width: "80%",
+    marginVertical: 16,
+  },
+  item: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginVertical: 8,
+  },
+});
+
+export default IPInfoScreen;
