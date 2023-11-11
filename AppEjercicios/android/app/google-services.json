@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "71090784205",
+    "project_id": "appejercicios-aeaa3",
+    "storage_bucket": "appejercicios-aeaa3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:71090784205:android:76d4eb4431b63c3d5aa684",
+        "android_client_info": {
+          "package_name": "com.appejercicios"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoVqZj7ZPNI9AeJ8Ky7Bv7sqOCAJ48_gY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

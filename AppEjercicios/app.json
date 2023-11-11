@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "AppEjercicios",
+    "slug": "AppEjercicios",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "AppEjercicios"
+}
