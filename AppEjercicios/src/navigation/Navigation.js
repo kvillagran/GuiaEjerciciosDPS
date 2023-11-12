@@ -10,6 +10,9 @@ import RegisterScreen from "../../screens/Register";
 import HomeScreenUser from "../../screens/HomeUser";
 import InfoPaciente from "../../screens/InfoPaciente";
 
+import Ionicons from "react-native-vector-icons/Ionicons";
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+
 const LogStack = createNativeStackNavigator();
 
 export default function LoginNavigation() {
@@ -28,9 +31,33 @@ const Tab = createBottomTabNavigator();
 function AppTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Dr. Amaya" component={ClinicaNavigation} />
-      <Tab.Screen name="Consultando IP" component={IPNavigation} />
-      <Tab.Screen name="ApiRest" component={RESTNavigation} />
+      <Tab.Screen
+        name="Dr. Amaya"
+        component={ClinicaNavigation}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome5 name="hospital-user" color={'#9181F2'} size={25} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Consultando IP"
+        component={IPNavigation}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome5 name="flag-usa" color={'#9181F2'} size={25} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="ApiRest"
+        component={RESTNavigation}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="football" color={'#9181F2'} size={30} />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
