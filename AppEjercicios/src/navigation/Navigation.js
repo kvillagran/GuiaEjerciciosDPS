@@ -27,13 +27,10 @@ const Tab = createBottomTabNavigator();
 
 function AppTabs() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false}}>
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Dr. Amaya" component={ClinicaNavigation} />
       <Tab.Screen name="Consultando IP" component={IPNavigation} />
-      <Tab.Screen
-        name="Implementando ApiRest"
-        component={ImplementandoIpRest}
-      />
+      <Tab.Screen name="ApiRest" component={RESTNavigation} />
     </Tab.Navigator>
   );
 }
@@ -59,13 +56,33 @@ function ClinicaNavigation() {
 
 function IPNavigation() {
   return (
-    <LogStack.Navigator screenOptions={{
+    <LogStack.Navigator
+      screenOptions={{
         headerStyle: {
           backgroundColor: "#9181F2",
           height: 60,
         },
-      }}>
+      }}
+    >
       <LogStack.Screen name="Consultar IP" component={ConsultandoIP} />
+    </LogStack.Navigator>
+  );
+}
+
+function RESTNavigation() {
+  return (
+    <LogStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#9181F2",
+          height: 60,
+        },
+      }}
+    >
+      <LogStack.Screen
+        name="Implementando ApiRest"
+        component={ImplementandoIpRest}
+      />
     </LogStack.Navigator>
   );
 }
