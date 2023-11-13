@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Input } from "react-native-elements";
 import auth from "@react-native-firebase/auth";
-import firestore from '@react-native-firebase/firestore';
-
+import firestore from "@react-native-firebase/firestore";
 
 const ImplementandoIpRest = () => {
   const navigation = useNavigation();
@@ -33,17 +33,21 @@ const ImplementandoIpRest = () => {
     if (!validateData()) {
       return;
     }
-      firestore().collection("Equipos").add({
-        nombre: formData.nombre,
-        facultad: formData.facultad,
-        ciclo: formData.ciclo,
-        torneo: formData.torneo,
-        userId: uid,
-      });
-      Alert.alert("Se ha agregado exitosamente su Equipo");
+    // Obtener una referencia al documento con el ID igual al nombre del equipo
+    const equipoRef = firestore().collection("Equipos").doc(formData.nombre);
+    // Asignar los datos al documento
+    equipoRef.set({
+      nombre: formData.nombre,
+      facultad: formData.facultad,
+      ciclo: formData.ciclo,
+      torneo: formData.torneo,
+      userId: uid,
+    });
+  
+    Alert.alert("Se ha agregado exitosamente su Equipo");
+    navigation.navigate("Equipos");
   };
 
-  
   const validateData = () => {
     setErrorNombre("");
     setErrorFacultad("");
@@ -59,86 +63,93 @@ const ImplementandoIpRest = () => {
       setErrorFacultad("La facultad debe llevar solo letras");
       isValid = false;
     }
-    if (!formData.torneo.match(/^[A-Za-z]+$/)) {
-      setErrorTorneo("El campo Torneo debe llevar solo letras");
+    if (!formData.torneo.match(/^(Masculino|masculino|Femenino|femenino)$/)) {
+      setErrorTorneo("El campo Torneo debe ser Masculino o Femenino");
       isValid = false;
     }
     if (formData.ciclo.length == 0) {
-      setErrorCiclo(
-        "El campo de año y ciclo no puede estar vacio."
-      );
+      setErrorCiclo("El campo de año y ciclo no puede estar vacio.");
       isValid = false;
     }
     return isValid;
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tittlesection}>
-        <Text style={styles.title}>Registra tu equipo</Text>
+    <ScrollView>
+      <View style={styles.container}>
+        <View style={styles.tittlesection}>
+          <Text style={styles.title}>Registra tu equipo</Text>
+        </View>
+        <View style={styles.inputsection}>
+          <View>
+            <Text style={styles.InputTittle}>Nombre del equipo:</Text>
+            <Input
+              placeholder="Ingresa el nombre de tu equipo..."
+              onChange={(e) => onChange(e, "nombre")}
+              style={styles.input}
+              errorMessage={errorNombre}
+              defaultValue={formData.nombre}
+              inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
+            />
+          </View>
+          <View>
+            <Text style={styles.InputTittle}>Facultad del equipo:</Text>
+            <Input
+              placeholder="Ingresa la facultad de tu equipo..."
+              onChange={(e) => onChange(e, "facultad")}
+              style={styles.input}
+              errorMessage={errorFacultad}
+              defaultValue={formData.facultad}
+              inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
+            />
+          </View>
+          <View>
+            <Text style={styles.InputTittle}>Año y ciclo de inscripción:</Text>
+            <Input
+              placeholder="Ingresa el año y el ciclo..."
+              onChange={(e) => onChange(e, "ciclo")}
+              style={styles.input}
+              errorMessage={errorCiclo}
+              defaultValue={formData.ciclo}
+              inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
+            />
+          </View>
+          <View>
+            <Text style={styles.InputTittle}>
+              Torneo que participara (masculino o femenino):
+            </Text>
+            <Input
+              placeholder="Ingresa en que torneo participará..."
+              onChange={(e) => onChange(e, "torneo")}
+              style={styles.input}
+              errorMessage={errorTorneo}
+              defaultValue={formData.torneo}
+              inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
+            />
+          </View>
+        </View>
+        <View style={styles.bottonSection}>
+          <TouchableOpacity style={[styles.buttonLogin]} onPress={save}>
+            <Text style={{ color: "black", fontSize: 18, fontWeight: "bold" }}>
+              Agregar Equipo
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.buttonLogin]}
+            onPress={() => navigation.navigate("Equipos")}
+          >
+            <Text style={{ color: "black", fontSize: 18, fontWeight: "bold" }}>
+              Equipos
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.inputsection}>
-        <View >
-          <Text style={styles.InputTittle}>Nombre del equipo:</Text>
-          <Input
-            placeholder="Ingresa el nombre de tu equipo..."
-            onChange={(e) => onChange(e, "nombre")}
-            style={styles.input}
-            errorMessage={errorNombre}
-            defaultValue={formData.nombre}
-            inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
-          />
-        </View>
-        <View >
-          <Text style={styles.InputTittle}>Facultad del equipo:</Text>
-          <Input
-            placeholder="Ingresa la facultad de tu equipo..."
-            onChange={(e) => onChange(e, "facultad")}
-            style={styles.input}
-            errorMessage={errorFacultad}
-            defaultValue={formData.facultad}
-            inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
-          />
-        </View>
-        <View >
-          <Text style={styles.InputTittle}>Año y ciclo de inscripción:</Text>
-          <Input
-            placeholder="Ingresa el año y el ciclo..."
-            onChange={(e) => onChange(e, "ciclo")}
-            style={styles.input}
-            errorMessage={errorCiclo}
-            defaultValue={formData.ciclo}
-            inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
-          />
-        </View>
-        <View >
-          <Text style={styles.InputTittle}>Torneo que participara (masculino o femenino):</Text>
-          <Input
-            placeholder="Ingresa en que torneo participará..."
-            onChange={(e) => onChange(e, "torneo")}
-            style={styles.input}
-            errorMessage={errorTorneo}
-            defaultValue={formData.torneo}
-            inputContainerStyle={{ borderBottomWidth: 0, width: "100%" }}
-          />
-        </View>
-      </View>
-      <View style={styles.bottonSection}>
-        <TouchableOpacity
-          style={[styles.buttonLogin]}
-          onPress={save}
-        >
-          <Text style={{ color: "black", fontSize: 18, fontWeight: "bold" }}>
-            Agregar Equipo
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const defaultFormValues = () => {
-  return { nombre: "", facultad: "", ciclo: "", torneo:"" };
+  return { nombre: "", facultad: "", ciclo: "", torneo: "" };
 };
 
 const styles = StyleSheet.create({

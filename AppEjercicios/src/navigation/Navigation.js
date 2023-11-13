@@ -12,6 +12,7 @@ import InfoPaciente from "../../screens/InfoPaciente";
 
 import Ionicons from "react-native-vector-icons/Ionicons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import Equipos from "../../screens/FormEquipos";
 
 const LogStack = createNativeStackNavigator();
 
@@ -109,6 +110,10 @@ function RESTNavigation() {
       <LogStack.Screen
         name="Implementando ApiRest"
         component={ImplementandoIpRest}
+      />
+      <LogStack.Screen
+        name="Equipos"
+        component={Equipos}
       />
     </LogStack.Navigator>
   );
