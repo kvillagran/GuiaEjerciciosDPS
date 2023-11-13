@@ -8,17 +8,17 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import axios from "axios"; // para hacer la petición a la API
+import axios from "axios"; //petición a la API
 import validator from "validator"; // para validar el formato de la IP
-import AsyncStorage from "@react-native-async-storage/async-storage"; // para usar el almacenamiento local
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HISTORY_KEY = "@ip_history"; // clave del historial
 
 const ConsultandoIP = () => {
-  const [ip, setIp] = useState(""); // IP ingresada
+  const [ip, setIp] = useState(""); 
   const [data, setData] = useState(null); // respuesta de la API
-  const [error, setError] = useState(null); // error de la petición o de validación
-  const [history, setHistory] = useState([]); // historial de consultas
+  const [error, setError] = useState(null); 
+  const [history, setHistory] = useState([]); 
 
   useEffect(() => {
     // obtener el historial cuando el componente se monta
@@ -34,7 +34,6 @@ const ConsultandoIP = () => {
         .then((response) => {
           // guardar la respuesta en el estado data
           setData(response.data);
-          // limpiar el estado error
           setError(null);
           // guardar la consulta en el historial
           saveToHistory(ip, response.data);
@@ -42,13 +41,11 @@ const ConsultandoIP = () => {
         .catch((err) => {
           // guardar el mensaje de error en el estado error
           setError(err.message);
-          // limpiar el estado data
           setData(null);
         });
     } else {
       // guardar el mensaje de error en el estado error
       setError("La IP ingresada no tiene un formato válido");
-      // limpiar el estado data
       setData(null);
     }
   };
@@ -60,7 +57,6 @@ const ConsultandoIP = () => {
       const history = await AsyncStorage.getItem(HISTORY_KEY);
       let historyArray = [];
       if (history) {
-        // convertir el historial a un arreglo de JavaScript
         historyArray = JSON.parse(history);
       }
       // crear un objeto con la IP y los demás datos que quieres mostrar
@@ -82,7 +78,6 @@ const ConsultandoIP = () => {
       // actualizar el estado del historial
       setHistory(historyArray);
     } catch (error) {
-      // manejar el error
       console.log(error);
     }
   };
@@ -90,7 +85,6 @@ const ConsultandoIP = () => {
   const getHistory = async () => {
     // obtener el historial desde AsyncStorage
     try {
-      // obtener el historial como una cadena de JSON
       const history = await AsyncStorage.getItem(HISTORY_KEY);
       let historyArray = [];
       if (history) {
@@ -100,7 +94,6 @@ const ConsultandoIP = () => {
       // devolver el arreglo del historial
       return historyArray;
     } catch (error) {
-      // manejar el error
       console.log(error);
       return [];
     }
@@ -109,12 +102,10 @@ const ConsultandoIP = () => {
   const clearHistory = async () => {
     // borrar el historial desde AsyncStorage
     try {
-      // eliminar el historial de AsyncStorage
       await AsyncStorage.removeItem(HISTORY_KEY);
       // actualizar el estado del historial
       setHistory([]);
     } catch (error) {
-      // manejar el error
       console.log(error);
     }
   };
